@@ -1,0 +1,230 @@
+/* src/styles/Home.module.css */
+.container {
+    padding: 2rem;
+    max-width: 900px; /* Wider for more content */
+    margin: auto;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .header h1 {
+      margin: 0;
+  }
+  
+  .card {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .card h2, .card h3, .card h4, .card h5 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  .card h2 { font-size: 1.5em; }
+  .card h3 { font-size: 1.3em; }
+  .card h4 { font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;}
+  .card h5 { font-size: 1em; color: #555; margin-bottom: 0.8rem;}
+  
+  .input, .select {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+  }
+  
+  .select {
+      cursor: pointer;
+  }
+  
+  .button {
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    font-weight: 500;
+  }
+  
+  .button:hover {
+    background-color: #005bb5;
+  }
+  
+  .button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  .buttonSecondary {
+      background-color: #6c757d; /* Bootstrap secondary */
+  }
+  .buttonSecondary:hover {
+      background-color: #5a6268;
+  }
+  
+  .buttonDanger {
+      background-color: #dc3545; /* Bootstrap danger */
+  }
+  .buttonDanger:hover {
+      background-color: #c82333;
+  }
+  
+  .smallButton {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      margin-left: 0.5rem;
+  }
+  
+  .floatRight {
+      float: right;
+      margin-left: 1rem; /* Ensure space */
+  }
+  
+  .message {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+    background-color: #e9ecef; /* Light grey */
+    border: 1px solid #ced4da;
+    word-break: break-word;
+    font-size: 0.9rem;
+    color: #495057;
+  }
+  
+  .compactMessage {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+      width: 100%; /* Make employee messages take full width below actions */
+      box-sizing: border-box;
+  }
+  
+  
+  .connectionInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  
+  .section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+  }
+  
+  .actionsSection {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      background-color: #f8f9fa;
+  }
+  
+  .actionBox {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
+  }
+  .actionBox:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+  }
+  
+  .formGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
+      gap: 1rem;
+      align-items: end; /* Align button to bottom */
+  }
+  
+  .formGrid button {
+      grid-column: 1 / -1; /* Make button span full width in the last row if needed */
+       @media (min-width: 600px) { /* Adjust breakpoint as needed */
+           grid-column: auto; /* Allow button side-by-side on wider screens */
+       }
+      width: auto; /* Allow button to size naturally */
+      justify-self: start; /* Align button left */
+  }
+  
+  
+  .employeeList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  }
+  
+  .employeeList li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      flex-wrap: wrap; /* Allow wrapping on small screens */
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem; /* Space between info and actions */
+  }
+  .employeeList li:last-child {
+      border-bottom: none;
+  }
+  
+  .employeeInfo {
+      display: flex;
+      flex-direction: column; /* Stack info vertically */
+      gap: 0.3rem;
+      flex-grow: 1; /* Take available space */
+  }
+  .employeeInfo span {
+      font-size: 0.9rem;
+  }
+  .employeeInfo span strong {
+      color: #333;
+  }
+  
+  .employeeActions {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0; /* Prevent actions from shrinking */
+  }
+  
+  .hint {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+  }
+  
+  .inlineForm {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 0.5rem;
+  }
+  
+  .inlineInput {
+    width: auto; /* Don't take full width */
+    flex-grow: 1; /* Allow input to grow */
+     max-width: 300px; /* Limit width */
+     margin-bottom: 0; /* Remove bottom margin */
+}
