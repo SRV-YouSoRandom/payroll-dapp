@@ -20,10 +20,6 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { http } from 'viem';
 import '@rainbow-me/rainbowkit/styles.css';
 
-// --- Your Target Chain Configuration ---
-// This should be one of the chains included in the 'supportedChains' array below
-const targetChain = sepolia; // e.g., sepolia
-
 // --- Define ALL Chains you want your DApp to support ---
 const supportedChains = [
     sepolia,
@@ -74,6 +70,7 @@ const config = getDefaultConfig({
   appName: 'Multi-Org Payroll DApp',
   projectId: projectId!,
   // 2. Pass the *complete list* of chains here
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chains: allSupportedChains as any, // Cast needed because of the mix of predefined and custom chains potentially
   // 3. Define transports explicitly for all chains
   transports: transportsConfig,

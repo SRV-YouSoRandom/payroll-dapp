@@ -2,8 +2,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { type Address } from 'viem';
 import { multiOrgPayrollABI, multiOrgPayrollContractAddress, TARGET_CHAIN_ID } from '@/lib/constants';
 import styles from '@/styles/Home.module.css';
+
+type OrgMappingTuple = readonly [owner: Address, name: string, nextPayTimestamp: bigint, exists: boolean];
 
 export function OrganizationCreator({ onOrganizationCreated }: { onOrganizationCreated: () => void }) {
     const { address, isConnected, chainId } = useAccount();
@@ -21,7 +24,7 @@ export function OrganizationCreator({ onOrganizationCreated }: { onOrganizationC
         chainId: TARGET_CHAIN_ID,
         query: { enabled: !!address }, // Only run if address is available
     });
-    const orgExists = orgData ? (orgData as any[])[3] : false; // Index 3 is 'exists' boolean in struct
+    const orgExists = orgData ? (orgData as OrgMappingTuple)[3] : false; // Index 3 is 'exists' boolean in struct
 
     // Hook to wait for transaction confirmation
     const { isLoading: isConfirming, isSuccess: isConfirmed, error: receiptError } = useWaitForTransactionReceipt({ hash });

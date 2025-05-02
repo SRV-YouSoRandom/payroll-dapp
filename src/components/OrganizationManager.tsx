@@ -1,8 +1,8 @@
 // src/components/OrganizationManager.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance, useSimulateContract } from 'wagmi';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
 import { type Address, parseUnits } from 'viem';
 import {
     multiOrgPayrollABI,
@@ -15,13 +15,17 @@ import {
 import {
     formatAddress,
     formatTimestamp,
+    formatBalance, // Make sure this is imported
     datetimeLocalToTimestamp,
     isValidAddress,
     getTokenAddress as formatInputTokenAddress
 } from '@/lib/utils';
 import styles from '@/styles/Home.module.css';
 
-// --- Interfaces ---
+// --- Type Definitions ---
+type OrgInfoTuple = readonly [owner: Address, name: string, nextPayTimestamp: bigint, employeeCount: bigint];
+type OrgMappingTuple = readonly [owner: Address, name: string, nextPayTimestamp: bigint, exists: boolean];
+
 interface OrganizationInfo {
     owner: Address;
     name: string;
@@ -29,29 +33,11 @@ interface OrganizationInfo {
     employeeCount: bigint;
     exists: boolean;
 }
-
 interface EmployeeInfo {
     salary: bigint;
     token: Address;
     paid: boolean;
 }
-
-// Type for loading states remains the same
-type ActionLoadingStates = {
-    fetchOrgs?: boolean;
-    fetchDetails?: boolean;
-    addEmployee?: boolean;
-    removeEmployee?: { [empAddress: string]: boolean };
-    updateEmployee?: { [empAddress: string]: boolean };
-    setPayDate?: boolean;
-    paySalaries?: boolean;
-    resetStatus?: boolean;
-    fund?: boolean;
-    withdraw?: boolean;
-    checkEthBalance?: boolean; // Retained if needed, but useBalance is preferred
-    checkTokenBalance?: boolean; // Retained if needed
-};
-
 
 export function OrganizationManager() {
     const { address: connectedAddress, isConnected, chainId } = useAccount();
@@ -61,9 +47,7 @@ export function OrganizationManager() {
     const [employees, setEmployees] = useState<Address[]>([]);
     const [employeeDetails, setEmployeeDetails] = useState<Record<Address, EmployeeInfo>>({});
     const [tokenBalanceAddress, setTokenBalanceAddress] = useState<string>('');
-    const [loadingStates, setLoadingStates] = useState<ActionLoadingStates>({ removeEmployee: {}, updateEmployee: {} });
-    const [messages, setMessages] = useState<Record<string, string>>({}); // Correct state variable name
-    // const [lastTxHash, setLastTxHash] = useState<Address | null>(null); // State to track last tx hash if needed
+    const [messages, setMessages] = useState<Record<string, string>>({});
 
     // --- Wagmi Hooks for Data Fetching ---
     const { data: orgIdsData, isLoading: isLoadingOrgs, refetch: refetchOrgIds } = useReadContract({
@@ -93,8 +77,8 @@ export function OrganizationManager() {
 
     const orgDetails: OrganizationInfo | null = useMemo(() => {
         if (!orgInfoData || !orgMappingData) return null;
-        const info = orgInfoData as [Address, string, bigint, bigint];
-        const mapping = orgMappingData as [Address, string, bigint, boolean];
+        const info = orgInfoData as OrgInfoTuple;
+        const mapping = orgMappingData as OrgMappingTuple;
         return {
             owner: info[0],
             name: info[1],
@@ -110,7 +94,7 @@ export function OrganizationManager() {
         functionName: 'getAllEmployees',
         args: [selectedOrgId!],
         chainId: TARGET_CHAIN_ID,
-        query: { enabled: !!selectedOrgId && !!orgDetails && orgDetails.employeeCount > BigInt(0) }, // Compare with BigInt(0)
+        query: { enabled: !!selectedOrgId && !!orgDetails && orgDetails.employeeCount > BigInt(0) },
     });
 
     const { data: nativeBalanceData } = useBalance({
@@ -128,51 +112,29 @@ export function OrganizationManager() {
     const { data: writeHash, writeContract, isPending: isWritePending, error: writeError } = useWriteContract();
     const { isLoading: isConfirming, isSuccess: isConfirmed, error: receiptError } = useWaitForTransactionReceipt({ hash: writeHash });
 
-    // --- Helper Functions ---
-    const setLoading = useCallback((action: keyof ActionLoadingStates, isLoading: boolean, key?: string) => {
-        setLoadingStates(prev => {
-            if (key && (action === 'removeEmployee' || action === 'updateEmployee')) {
-                return { ...prev, [action]: { ...(prev[action] || {}), [key]: isLoading } };
-            }
-            return { ...prev, [action]: isLoading };
-        });
-    }, []); // No dependency needed as it only uses setLoadingStates setter
-
-    const clearMessages = useCallback(() => setMessages({}), []);
-
     const isOwnerConnected = useMemo(() => {
         return isConnected && orgDetails?.owner && connectedAddress?.toLowerCase() === orgDetails.owner.toLowerCase();
     }, [isConnected, connectedAddress, orgDetails]);
 
     // --- Effects ---
-
-    // Effect to fetch employee details
-    useEffect(() => {
-        const fetchAllEmployeeDetails = async () => {
-            if (!selectedOrgId || !employeesData || (employeesData as Address[]).length === 0) {
-                setEmployees([]);
-                setEmployeeDetails({});
-                return;
-            }
-            const empList = employeesData as Address[];
+    useEffect(() => { // Employee Details Fetch Logic
+        if (employeesData) {
+           const empList = employeesData as Address[];
             setEmployees(empList);
+            // Set placeholder details initially
             const details: Record<Address, EmployeeInfo> = {};
-             // setMessages(prev => ({...prev, details:'Fetching employee statuses...'})); // Use setter correctly
-
-             // Placeholder logic - needs proper implementation if detailed status required pre-action
             for (const empAddress of empList) {
-                details[empAddress] = { salary: BigInt(0), token: ETH_ADDRESS_ZERO as Address, paid: false }; // Use BigInt(0)
+                details[empAddress] = { salary: BigInt(0), token: ETH_ADDRESS_ZERO as Address, paid: false };
             }
             setEmployeeDetails(details);
-             // setMessages(prev => ({...prev, details:''})); // Clear message correctly
-        };
+            // TODO: Implement actual fetching of details per employee if needed immediately
+        } else {
+            setEmployees([]);
+            setEmployeeDetails({});
+        }
+    }, [selectedOrgId, employeesData]);
 
-        fetchAllEmployeeDetails();
-    }, [selectedOrgId, employeesData]); // Dependencies
-
-
-    // Effect to handle transaction status updates
-    useEffect(() => {
+    useEffect(() => { // Transaction Status Update Logic
         const area = 'txStatus';
         if (isWritePending) {
             setMessages(prev => ({ ...prev, [area]: 'Sending transaction...' }));
@@ -183,22 +145,20 @@ export function OrganizationManager() {
             // Trigger relevant data refreshes after confirmation
             refetchOrgInfo();
             refetchEmployees();
-            refetchOrgMapping(); // Also refetch the mapping which has 'exists' flag
-            // Consider more targeted refreshes if needed
+            refetchOrgMapping();
         } else if (writeError) {
-            setMessages(prev => ({ ...prev, [area]: `Transaction Error: ${writeError.message}` })); // Use .message
+            setMessages(prev => ({ ...prev, [area]: `Transaction Error: ${writeError.message}` }));
         } else if (receiptError) {
-             setMessages(prev => ({ ...prev, [area]: `Confirmation Error: ${receiptError.message}` })); // Use .message
+             setMessages(prev => ({ ...prev, [area]: `Confirmation Error: ${receiptError.message}` }));
         }
-        // Optional: Clear message after a delay or based on state transitions
-    }, [isWritePending, isConfirming, isConfirmed, writeHash, writeError, receiptError, refetchOrgInfo, refetchEmployees, refetchOrgMapping]); // Added refetchOrgMapping
+    }, [isWritePending, isConfirming, isConfirmed, writeHash, writeError, receiptError, refetchOrgInfo, refetchEmployees, refetchOrgMapping]);
 
     // --- Action Handlers ---
-
     const executeWrite = async (
         functionName: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         args: any[],
-        successAreaMessage: string, // Specific message for the action area on success
+        successAreaMessage: string, // Note: success message isn't explicitly used here anymore, handled by useEffect
         area: string = 'txStatus',
         value?: bigint
     ) => {
@@ -215,7 +175,8 @@ export function OrganizationManager() {
              return;
         }
 
-        setMessages(prev => ({ ...prev, txStatus: 'Preparing transaction...', [area]: 'Processing...' })); // Update both areas
+        // Clear previous specific area message before starting new action
+        setMessages(prev => ({ ...prev, txStatus: 'Preparing transaction...', [area]: 'Processing...' }));
 
         writeContract({
             address: multiOrgPayrollContractAddress,
@@ -225,22 +186,19 @@ export function OrganizationManager() {
             value,
             chainId: TARGET_CHAIN_ID,
         }, {
-            // onSuccess is called when tx is sent, not confirmed
             onSuccess: (hash) => {
                 setMessages(prev => ({ ...prev, txStatus: `Transaction sent (Tx: ${formatAddress(hash)}). Waiting for confirmation...`, [area]: 'Waiting...' }));
             },
-            // onError handles errors before/during sending
             onError: (error) => {
+                 console.error(`WriteContract Error (${functionName}):`, error); // Log specific error context
                  setMessages(prev => ({ ...prev, txStatus: `Send Error: ${error.message}`, [area]: `Failed: ${error.message}` }));
             }
         });
-        // The useEffect hook handles confirmation/final errors
     };
 
-    // Add Employee
     const handleAddEmployee = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const area = 'addEmp'; // Define message area
+        const area = 'addEmp';
         const formData = new FormData(event.currentTarget);
         const empAddress = formData.get('empAddress') as string;
         const salaryStr = formData.get('salary') as string;
@@ -254,24 +212,22 @@ export function OrganizationManager() {
         let salaryWei: bigint;
         try {
             salaryWei = parseUnits(salaryStr, DEFAULT_TOKEN_DECIMALS);
-            if (salaryWei < BigInt(0)) throw new Error("Salary cannot be negative"); // Use BigInt(0)
-        } catch (e) {
-             setMessages(prev => ({ ...prev, [area]: 'Invalid salary amount.'}));
-             return;
+            if (salaryWei < BigInt(0)) throw new Error("Salary cannot be negative");
+        } catch (error) {
+            console.error("Salary parsing error:", error);
+            setMessages(prev => ({ ...prev, [area]: 'Invalid salary amount.'}));
+            return;
         }
 
         await executeWrite(
             'addEmployee',
             [selectedOrgId, empAddress, salaryWei, tokenAddress],
-            `Employee added request sent.`, // Success message handled by useEffect now
+            `Employee added request sent.`,
             area
         );
-         // Reset form optimistically or based on onSuccess/isConfirmed
-         // For simplicity, reset only if there wasn't an immediate write error
          if (!writeError) (event.target as HTMLFormElement).reset();
     };
 
-    // Remove Employee
     const handleRemoveEmployee = async (empAddress: Address) => {
         if (!selectedOrgId || !empAddress) return;
         const area = `empAction_${empAddress}`;
@@ -284,7 +240,6 @@ export function OrganizationManager() {
         );
     };
 
-    // Set Next Pay Date
     const handleSetPayDate = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const area = 'payDate';
@@ -305,11 +260,10 @@ export function OrganizationManager() {
         );
     };
 
-    // Pay Salaries
     const handlePaySalaries = async () => {
         const area = 'payRun';
         if (!selectedOrgId || !orgDetails) return;
-        if (!orgDetails.nextPayTimestamp || orgDetails.nextPayTimestamp === BigInt(0)) { // Use BigInt(0)
+        if (!orgDetails.nextPayTimestamp || orgDetails.nextPayTimestamp === BigInt(0)) {
             setMessages(prev => ({ ...prev, [area]: 'Next pay date not set.'}));
             return;
         }
@@ -331,7 +285,6 @@ export function OrganizationManager() {
         );
     };
 
-    // Reset Payment Status
     const handleResetStatus = async () => {
         const area = 'resetStatus';
         if (!selectedOrgId) return;
@@ -349,7 +302,6 @@ export function OrganizationManager() {
         );
     };
 
-    // Fund Organization (ETH)
     const handleFund = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const area = 'fund';
@@ -358,8 +310,9 @@ export function OrganizationManager() {
         let valueWei: bigint;
         try {
             valueWei = parseUnits(amountStr, 18); // ETH decimals
-            if (valueWei <= BigInt(0)) throw new Error("Amount must be positive"); // Use BigInt(0)
-        } catch (e) {
+            if (valueWei <= BigInt(0)) throw new Error("Amount must be positive");
+        } catch (error) {
+            console.error("Funding amount parsing error:", error);
             setMessages(prev => ({ ...prev, [area]: 'Invalid ETH amount.'}));
             return;
         }
@@ -374,7 +327,6 @@ export function OrganizationManager() {
         if (!writeError) (event.target as HTMLFormElement).reset();
     };
 
-    // Withdraw Funds
     const handleWithdraw = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const area = 'withdraw';
@@ -387,8 +339,9 @@ export function OrganizationManager() {
 
         try {
             amountWei = parseUnits(amountStr, decimals);
-            if (amountWei <= BigInt(0)) throw new Error("Amount must be positive"); // Use BigInt(0)
-        } catch (e) {
+            if (amountWei <= BigInt(0)) throw new Error("Amount must be positive");
+        } catch (error) {
+            console.error("Withdraw amount parsing error:", error);
             setMessages(prev => ({ ...prev, [area]: 'Invalid amount.'}));
              return;
         }
@@ -414,7 +367,7 @@ export function OrganizationManager() {
                     {isLoadingOrgs ? 'Refreshing...' : 'Refresh List'}
                  </button>
                 {isLoadingOrgs && !orgIds.length && <p>Loading organizations...</p>}
-                {messages.list && <p className={styles.message}>{messages.list}</p>} {/* Use messages state */}
+                {messages.list && <p className={styles.message}>{messages.list}</p>}
                 {orgIds.length > 0 ? (
                     <select
                         onChange={(e) => setSelectedOrgId(e.target.value ? e.target.value as Address : null)}
@@ -450,21 +403,21 @@ export function OrganizationManager() {
                     <span>
                         <strong>Token: </strong>
                         {isValidAddress(tokenBalanceAddress) && tokenBalanceAddress !== ETH_ADDRESS_ZERO
-                            ? tokenBalanceData ? `${tokenBalanceData.formatted} ${tokenBalanceData.symbol || 'Tokens'}` : 'Loading...' // Added symbol fallback
+                            ? tokenBalanceData ? `${tokenBalanceData.formatted} ${tokenBalanceData.symbol || 'Tokens'}` : 'Loading...'
                             : '(Enter Address)'
                         }
                     </span>
                 </div>
-                 {messages.balance && <p className={`${styles.message} ${styles.compactMessage}`}>{messages.balance}</p>} {/* Use messages state */}
+                 {messages.balance && <p className={`${styles.message} ${styles.compactMessage}`}>{messages.balance}</p>}
              </div>
 
             {/* Transaction Status */}
-            {messages.txStatus && <p className={`${styles.message} ${styles.card}`}>{messages.txStatus}</p>} {/* Use messages state */}
+            {messages.txStatus && <p className={`${styles.message} ${styles.card}`}>{messages.txStatus}</p>}
 
 
             {/* Org Details & Actions */}
             {isLoadingOrgInfo && selectedOrgId && <p className={styles.card}>Loading organization details...</p>}
-             {messages.details && <p className={`${styles.message} ${styles.card}`}>{messages.details}</p>} {/* Use messages state */}
+             {messages.details && <p className={`${styles.message} ${styles.card}`}>{messages.details}</p>}
 
             {selectedOrgId && orgDetails && orgDetails.exists && (
                 <div className={styles.card}>
@@ -480,13 +433,23 @@ export function OrganizationManager() {
                         {employees.length > 0 ? (
                             <ul className={styles.employeeList}>
                                 {employees.map(emp => {
+                                    // Get details object for the current employee from state
                                     const details = employeeDetails[emp];
                                     return (
                                         <li key={emp}>
                                              <div className={styles.employeeInfo}>
                                                  <span><strong>{formatAddress(emp)}</strong></span>
-                                                 {/* Placeholder - needs better state update or refetch for details */}
-                                                 <span>(Status details may require page refresh after actions)</span>
+                                                 {/* Use the details object */}
+                                                 {details ? (
+                                                     <>
+                                                         {/* Use formatBalance utility */}
+                                                         <span>Salary: {formatBalance(details.salary, DEFAULT_TOKEN_DECIMALS)} {formatAddress(details.token)}</span>
+                                                         <span>Paid: {details.paid ? 'Yes' : 'No'}</span>
+                                                     </>
+                                                 ) : (
+                                                     // Fallback if details somehow aren't in the state object yet
+                                                     <span>(Details loading or unavailable)</span>
+                                                 )}
                                              </div>
                                               {isOwnerConnected && (
                                                  <div className={styles.employeeActions}>
@@ -499,7 +462,7 @@ export function OrganizationManager() {
                                                      </button>
                                                  </div>
                                               )}
-                                                {messages[`empAction_${emp}`] && <p className={`${styles.message} ${styles.compactMessage}`}>{messages[`empAction_${emp}`]}</p>} {/* Use messages state */}
+                                                {messages[`empAction_${emp}`] && <p className={`${styles.message} ${styles.compactMessage}`}>{messages[`empAction_${emp}`]}</p>}
                                         </li>
                                     );
                                 })}
@@ -523,7 +486,7 @@ export function OrganizationManager() {
                                          {isLoading ? 'Busy...' : 'Add Employee'}
                                      </button>
                                  </form>
-                                  {messages.addEmp && <p className={styles.message}>{messages.addEmp}</p>} {/* Use messages state */}
+                                  {messages.addEmp && <p className={styles.message}>{messages.addEmp}</p>}
                              </div>
                              {/* Set Pay Date */}
                              <div className={styles.actionBox}>
@@ -534,7 +497,7 @@ export function OrganizationManager() {
                                           {isLoading ? 'Busy...' : 'Set Date'}
                                       </button>
                                   </form>
-                                  {messages.payDate && <p className={styles.message}>{messages.payDate}</p>} {/* Use messages state */}
+                                  {messages.payDate && <p className={styles.message}>{messages.payDate}</p>}
                              </div>
                               {/* Pay Salaries */}
                               <div className={styles.actionBox}>
@@ -543,7 +506,7 @@ export function OrganizationManager() {
                                          {isLoading ? 'Busy...' : 'Pay All Unpaid Salaries'}
                                    </button>
                                     <p className={styles.hint}>Requires funds and correct pay date.</p>
-                                    {messages.payRun && <p className={styles.message}>{messages.payRun}</p>} {/* Use messages state */}
+                                    {messages.payRun && <p className={styles.message}>{messages.payRun}</p>}
                               </div>
                               {/* Reset Status */}
                               <div className={styles.actionBox}>
@@ -552,7 +515,7 @@ export function OrganizationManager() {
                                        {isLoading ? 'Busy...' : 'Reset All "Paid" Status'}
                                    </button>
                                     <p className={styles.hint}>Use after setting next pay date.</p>
-                                    {messages.resetStatus && <p className={styles.message}>{messages.resetStatus}</p>} {/* Use messages state */}
+                                    {messages.resetStatus && <p className={styles.message}>{messages.resetStatus}</p>}
                               </div>
                                {/* Withdraw Funds */}
                                <div className={styles.actionBox}>
@@ -564,7 +527,7 @@ export function OrganizationManager() {
                                               {isLoading ? 'Busy...' : 'Withdraw'}
                                          </button>
                                     </form>
-                                     {messages.withdraw && <p className={styles.message}>{messages.withdraw}</p>} {/* Use messages state */}
+                                     {messages.withdraw && <p className={styles.message}>{messages.withdraw}</p>}
                                </div>
                         </div>
                      )}
@@ -581,7 +544,7 @@ export function OrganizationManager() {
                                      {isLoading ? 'Busy...' : `Fund Org with ${NATIVE_CURRENCY_SYMBOL}`}
                                  </button>
                              </form>
-                              {messages.fund && <p className={styles.message}>{messages.fund}</p>} {/* Use messages state */}
+                              {messages.fund && <p className={styles.message}>{messages.fund}</p>}
                           </div>
                      </div>
 
