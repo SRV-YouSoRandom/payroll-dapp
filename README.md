@@ -1,200 +1,167 @@
-🚀 Multi-Org Payroll DApp 💸🔗
+# 🚀 Multi-Org Payroll DApp 💸🔗
 
-Manage payroll for multiple organizations seamlessly on the blockchain!
+Manage payroll for multiple organizations seamlessly on the blockchain.
 
-This open-source DApp provides a user-friendly interface built with Next.js, Wagmi, and RainbowKit to interact with the MultiOrgPayroll smart contract. It allows organization owners to manage employees, set pay schedules, fund their organizations with ETH or ERC20 tokens, and distribute salaries directly to employee wallets.
+This open-source DApp offers a user-friendly interface built with **Next.js**, **Wagmi**, and **RainbowKit**, allowing organization owners to manage employees, set pay schedules, fund organizations with ETH or ERC20 tokens, and distribute salaries directly to wallets.
 
-Built for transparency, automation, and the future of compensation! ✨
+Built for **transparency, automation**, and the **future of compensation**. ✨
 
-(It's highly recommended to replace this line with a screenshot or GIF of the DApp in action!)
-[Insert Screenshot/GIF Here]
+> 💡 **Pro Tip:** Add a screenshot or GIF of the DApp in action here!
+>
+> ![Screenshot or GIF Placeholder](#)
 
-✨ Features
+---
 
-Organization Management: Create new organizations where the creator becomes the owner.
+## ✨ Features
 
-Employee Management: Add/Remove employees, define their salary amount and currency (ETH or specific ERC20 token).
+- **Organization Management:** Create and manage organizations. The creator becomes the owner.
+- **Employee Management:** Add/remove employees, define salary amounts and payment currency (ETH or specific ERC20).
+- **Payroll Scheduling:** Set the next payment timestamp.
+- **Funding:** Fund organizations in ETH (ERC20 support possible).
+- **Salary Payments:** Execute payroll runs to distribute salaries.
+- **Status Tracking:** Track employee payment statuses.
+- **Withdrawals:** Owners can withdraw excess funds.
+- **Multi-Wallet Support:** Compatible with MetaMask, WalletConnect, Coinbase Wallet, and others.
+- **Network Awareness:** Displays current wallet, address, network, and warns on wrong chains.
+- **Customizable Chains:** Easily support Mainnet, Polygon, Sepolia, Arbitrum, or custom L2s.
 
-Payroll Scheduling: Set the next payment timestamp for an organization.
+---
 
-Funding: Easily fund organization treasuries within the contract using ETH (support for funding via ERC20 tokens can be added).
+## 🛠️ Tech Stack
 
-Salary Payments: Execute payroll runs to distribute salaries to all eligible employees in their designated currency.
+- **Frontend:** Next.js (App Router), React, TypeScript
+- **Web3:** Wagmi, Viem, Ethers.js v6, RainbowKit
+- **Styling:** CSS Modules
+- **Smart Contracts:** Solidity (contract code provided separately)
 
-Status Tracking: View employee payment status for the current cycle.
+---
 
-Withdrawals: Owners can withdraw excess funds (ETH or Tokens) from their organization's contract balance.
+## 📋 Prerequisites
 
-Multi-Wallet Support: Connect using various wallets like MetaMask, Coinbase Wallet, WalletConnect compatible mobile wallets, etc., powered by RainbowKit.
+Ensure you have the following installed:
 
-Network Awareness: Clear UI indicators for connected wallet, address, and network, including warnings for wrong networks.
+- **Node.js** v18.x or later
+- **npm** or **yarn**
+- **Git**
+- **Web3 Wallet:** MetaMask or WalletConnect-compatible wallet
+- **WalletConnect Cloud Project ID:** [Get one here](https://cloud.walletconnect.com/)
 
-Customizable Chains: Easily configure support for various EVM chains (Mainnet, Polygon, Sepolia, Arbitrum, custom L2s, etc.).
+---
 
-🛠️ Tech Stack
+## 🚀 Getting Started
 
-Frontend: Next.js (App Router), React, TypeScript
+### 1. Clone the Repository
 
-Web3: Wagmi (React Hooks for Ethereum), Viem (Ethereum Interface), Ethers.js (v6 - Utilities), RainbowKit (Wallet Connection UI)
-
-Styling: CSS Modules
-
-Smart Contract: Solidity (Contract code provided separately)
-
-##📋 Prerequisites
-
-Before you begin, ensure you have the following installed and set up:
-
-Node.js: Version 18.x or later (Check with node -v).
-
-Package Manager: npm (usually comes with Node.js) or yarn.
-
-Git: For cloning the repository.
-
-Web3 Wallet: A browser extension (like MetaMask) or mobile wallet compatible with WalletConnect for testing interactions.
-
-WalletConnect Cloud Account: You need a Project ID from WalletConnect Cloud to enable mobile wallet connections. It's free!
-
-🚀 Getting Started
-
-Follow these steps to set up and run the project locally:
-
-Clone the Repository:
-
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+```bash
+git clone https://github.com/SRV-YouSoRandom/smart-payroll-dapp.git
 cd YOUR_REPO_NAME
+````
 
+> Replace `YOUR_REPO_NAME` with the actual repository name.
 
-(Replace YOUR_USERNAME/YOUR_REPO_NAME with the actual path)
+### 2. Install Dependencies
 
-Install Dependencies:
-
+```bash
 npm install
 # or
 yarn install
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+```
 
-Set Up Environment Variables:
+### 3. Set Up Environment Variables
 
-Create a file named .env.local in the root of the project.
+Create a `.env.local` file in the project root:
 
-Add your WalletConnect Project ID to this file:
-
+```env
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="YOUR_WALLETCONNECT_PROJECT_ID"
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-.env.local
-IGNORE_WHEN_COPYING_END
+```
 
-Replace "YOUR_WALLETCONNECT_PROJECT_ID" with the actual ID you obtained from WalletConnect Cloud. This is required for RainbowKit's WalletConnect connector.
+> Replace with your actual WalletConnect Project ID.
 
-Deploy the Smart Contract:
+### 4. Deploy the Smart Contract
 
-This frontend requires the MultiOrgPayroll smart contract to be deployed on your target blockchain network (e.g., Sepolia testnet, Polygon mainnet, your custom chain).
+Deploy `MultiOrgPayroll.sol` to your desired network (e.g., Sepolia testnet).
 
-The Solidity smart contract code is located in the /smart-contract directory (<- Adjust this path if needed) or in a separate repository (<- Link here if separate).
+* Smart contract source: `/smart-contract` (or update if in a separate repo).
+* Use tools like **Hardhat** or **Foundry** for deployment.
+* Note down:
 
-Follow the instructions in the contract's own README (or use tools like Hardhat or Foundry) to compile and deploy the MultiOrgPayroll.sol contract.
+  * The deployed contract address
+  * The target Chain ID (e.g., Sepolia = `11155111`)
 
-Crucially, note down:
+### 5. Configure Frontend Constants
 
-The Deployed Contract Address.
+Edit `src/lib/constants.ts`:
 
-The Chain ID of the network you deployed to (e.g., Sepolia is 11155111).
+```ts
+export const multiOrgPayrollContractAddress = 'YOUR_DEPLOYED_CONTRACT_ADDRESS';
 
-Configure Frontend Constants:
-
-Open the configuration file: src/lib/constants.ts.
-
-Update the following values to match your deployed contract:
-
-// src/lib/constants.ts
-
-// V V V --- UPDATE THESE --- V V V
-export const multiOrgPayrollContractAddress = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'; // Replace with your contract address
-// Example using Sepolia (update targetChain if needed)
-import { sepolia } from 'wagmi/chains'; // Import your target chain
-export const TARGET_CHAIN_ID = sepolia.id; // Use chain ID from wagmi/chains (e.g., 11155111 for Sepolia)
+import { sepolia } from 'wagmi/chains';
+export const TARGET_CHAIN_ID = sepolia.id;
 export const TARGET_CHAIN_NAME = sepolia.name;
 export const NATIVE_CURRENCY_SYMBOL = sepolia.nativeCurrency.symbol;
-// ^ ^ ^ --- UPDATE THESE --- ^ ^ ^
 
-// ABI should be correct if MultiOrgPayroll.json is up-to-date
 import MultiOrgPayrollABI from './abi/MultiOrgPayroll.json';
 export const multiOrgPayrollABI = MultiOrgPayrollABI;
+```
 
-// ... other constants ...
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-TypeScript
-IGNORE_WHEN_COPYING_END
+> Ensure the chain matches your deployment network.
 
-Ensure the targetChain imported from wagmi/chains (e.g., sepolia) matches the network where you deployed the contract.
+### 6. (Optional) Add Custom Chains
 
-(Optional) Configure Supported Chains:
+Edit `src/contexts/Web3Provider.tsx` to include new chains by importing from `wagmi/chains` or defining custom chain objects.
 
-If you want to support chains other than the default ones (Mainnet, Sepolia) or add custom networks, edit the src/contexts/Web3Provider.tsx file.
+### 7. Run the Development Server
 
-Follow the comments in that file to import chain definitions from wagmi/chains or define custom chain objects and add them to the allSupportedChains array.
-
-Run the Development Server:
-
+```bash
 npm run dev
 # or
 yarn dev
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
+```
 
-Open the DApp:
-Navigate to http://localhost:3000 in your browser.
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-🖥️ Usage
+---
 
-Connect Wallet: Click the "Connect Wallet" button (provided by RainbowKit) and choose your preferred wallet.
+## 🖥️ Usage
 
-Switch Network: Ensure your connected wallet is on the same network you configured in constants.ts (the TARGET_CHAIN_ID). RainbowKit will show the current network and allow switching if configured.
+* **Connect Wallet:** Use the RainbowKit "Connect Wallet" button.
+* **Switch Network:** Ensure wallet matches `TARGET_CHAIN_ID`.
+* **Create Organization:** First-time users can create a new one; your wallet becomes the owner.
+* **Manage Organizations:** Select your organization and perform owner actions (Add/Remove Employees, Set Pay Date, Pay Salaries, Withdraw).
+* **Fund:** Anyone can send ETH to an organization from the UI.
 
-Create Organization: If you don't own an organization yet, use the "Create New Organization" form. Your connected wallet address will become the Organization ID and owner.
+---
 
-Select Organization: Choose an organization from the dropdown list to manage it.
+## 🤝 Contributing
 
-Manage: If you are the owner of the selected organization, owner-specific actions (Add/Remove Employee, Set Pay Date, Pay Salaries, Withdraw) will become available.
+We welcome contributions!
 
-Fund: Anyone can use the "Fund Organization" section to send the native currency (e.g., ETH) to the selected organization's contract balance.
+1. Fork this repo.
+2. Create a feature branch:
 
-🤝 Contributing
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Commit changes with meaningful messages.
+4. Push to your fork:
 
-Contributions are welcome! If you'd like to contribute, please follow these steps:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. Open a Pull Request to the `main` branch.
 
-Fork the repository on GitHub.
+> Follow coding conventions and add tests where appropriate. Open an issue to discuss ideas before major changes.
 
-Create a new branch for your feature or bug fix (git checkout -b feature/your-feature-name).
+---
 
-Make your changes and commit them with clear messages.
+## 📜 License
 
-Push your branch to your fork (git push origin feature/your-feature-name).
+Licensed under the [MIT License](LICENSE).
 
-Open a Pull Request to the main repository's main branch.
+---
 
-Please ensure your code follows the project's coding style and includes tests where applicable. Feel free to open an issue first to discuss potential changes.
+## ⚠️ Security Notice
 
-📜 License
+This project is provided **as-is** without a formal security audit.
 
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-⚠️ Important Note on Security
-
-This is an open-source project provided as-is. While developed with care, it has not undergone a formal security audit. DO NOT use this DApp or the associated smart contract with significant real funds on mainnet without conducting a thorough independent security audit. Use it on testnets or with small amounts at your own risk.
+> **Do NOT** use with real funds on mainnet without proper auditing. Use testnets or small amounts at your own risk.
