@@ -57,8 +57,6 @@ git clone https://github.com/SRV-YouSoRandom/smart-payroll-dapp.git
 cd YOUR_REPO_NAME
 ````
 
-> Replace `YOUR_REPO_NAME` with the actual repository name.
-
 ### 2. Install Dependencies
 
 ```bash
